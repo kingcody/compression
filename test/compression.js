@@ -282,6 +282,25 @@ describe('compression()', function(){
     .expect(200, buf.toString(), done)
   })
 
+  it('should transfer large bodies with Content-Type application/json', function (done) {
+    var len = bytes('1mb')
+    var buf = new Buffer(len)
+    var server = createServer({ threshold: 0 }, function (req, res) {
+      res.setHeader('Content-Type', 'application/json')
+      res.end(buf)
+    })
+
+    buf.fill('.')
+
+    request(server)
+    .get('/')
+    .set('Accept-Encoding', 'gzip')
+    .expect('Transfer-Encoding', 'chunked')
+    .expect('Content-Encoding', 'gzip')
+    .expect(shouldHaveBodyLength(len))
+    .expect(200, buf.toString(), done)
+  })
+
   it('should transfer large bodies with multiple writes', function (done) {
     var len = bytes('40kb')
     var buf = new Buffer(len)
